@@ -1,0 +1,188 @@
+#!/bin/bash
+
+script() {
+echo "want encrypt or decrypt the file?"
+sleep 1
+echo "Enter 'Enc' for encryption,'Dec' for decryption, 'Q' for quit"
+read input
+
+if [[ $input == "Q" ]]; then
+	echo -n "exit the program."
+	exit
+
+elif [[ $input == "Enc" ]]; then
+	function bash(){
+	echo "Enter 'E' if the file exists and 'C' if you want to create a file."
+	read E_or_C
+	if [[ $E_or_C == 'C' ]]; then
+		create() {
+			echo -n "Name the file: "
+			read bin
+			if [[ -f $bin ]]; then
+				file_check(){
+					echo "exists file."
+					echo -n "submit another name."
+					create
+				}
+				file_check
+				echo "enter the content in file."
+				read content
+				echo "$content" > $bin
+			fi
+		}
+		create 
+	elif [[ $E_or_C == "E" ]]; then
+		echo -n "enter file name:"
+		read bin
+		if [ -f "$bin" ];then
+			echo "read content of file:"
+			cat $bin
+		else
+			echo "couldn't find '$bin'."
+			bash
+		fi
+	else
+		echo "incorrect input!"
+		bash
+	fi 
+}
+bash
+sleep 1
+enc_name(){
+	echo -n "Name that file where u want store encrypted content:"
+	read enc_file
+	if [[ -f $enc_file ]]; then
+		echo "exist file."
+		sleep 1
+		echo -n "rerun"
+		enc_name
+	fi
+}
+enc_name
+enc_process(){
+	echo -n "do you want assym key or symm key encrypt [as/sy] :"
+	read enc_typ
+	if [[ $enc_typ == 'as' ]]; then
+		echo -n "file encrypting"
+		openssl genrsa -out privatekey 1024
+		openssl rsa -in privatkey -out publickey -pubout >& /dev/null
+		openssl pkeyutl -encrypt -in $file_name -inkey publickey -pubin -out $enc_file
+		echo "file_name has encrypted to file '$enc_file'"
+		sleep 1
+	elif [[ $enc_typ == 'sy' ]]; then
+		echo -n "enter pass for encryption: "
+		stty -echo
+		read pass
+		stty echo
+		echo""
+		ch(){
+			echo "which hash algorithm want to use?"
+			echo "rc2-cbc" > encrption_alg.txt
+			echo "camellia-128-cbc" >> encryption_alg.txt
+			echo "cast5-ecb" >> encyrption_alg.txt
+			echo "des-ede3" >> encryption_alg.txt
+			echo "rc4" >> encryption_alg.txt
+			cat -n encryption_alg.txt
+			read in_alg
+			lines=$(wc -l < encryption_alg.txt)
+			if [ -z $algo ]; then
+				echo "empty"
+				ch
+			elif ! [[ $algo =~ ^[0-9]+$ ]]; then
+				echo 'invalid'
+				ch
+			elif ! [ $algo -le $lines ]; then
+				echo "not in the system"
+				ch
+			fi
+		}
+			am=$(sed -n $in_alg"p" encryption_alg.txt)
+			openssl enc -$am -in $file_name -out $enc_file -k $pass >& /dev/null
+			echo "encryption success."
+
+			echo "now,redirecting"
+
+			rerun
+		else
+			echo "wrong input"
+			sleep 2
+			enc_process
+		fi
+	}
+	enc_process
+
+bash
+elif [[ $input == "Dec" ]]; then
+	function dec_process(){
+		echo "which file you want to decrypt?"
+		read file_dec
+		if [ -f "file_dec" ];then
+		sleep 1
+	else 
+		echo "be sure you enter right file."
+		dec_process
+		fi
+		dec_name(){
+		echo " in which file you want to store your decrypted file?"
+		read dec_file
+		if [[ -f $dec_file ]]; then
+			echo "exists file"
+			decrypt_name
+		fi
+	}
+	decrypt_name
+		echo -n "enter 'as' for assymmetric key used during encrytion and 'sy' if symmetric key used:"
+		read enc_key
+		if [[ $enc_key == 'as' ]]; then
+			openssl pkeyutl -decrypt -in $file_to_decr -out $derypt_file -inkey privatekey
+			echo "success decryption"
+			sleep 2
+			echo "reading content"
+			cat $file_dec
+			function to_rerun(){
+				echo -n "do you want to re-run program? [yes/NO]: "
+				read run
+				if [[ $run == "yes" ]]; then
+					tool
+				else
+					echo -n "didn't get"
+					to_return
+				fi
+			}
+
+		elif [[ $enc_key == 'sy' ]];then
+			echo -n "enter password: "
+			stty -echo
+			read pass
+			stty echo
+			echo ""
+			echo "which algorithm used during encryption?"
+			cat -n encryption_alg.txt
+			read in_alg
+			am=$(sed -n $in_alg"p" encryption_alg.txt)
+		openssl $am -d -in $file_to_decr -out $	decrypt_file -k $pass >& /dev/null
+		echo "success decrypting"
+		sleep 1
+		echo " read decrypted file content"
+		cat $decrypt_file
+		function to_rerun(){
+			echo -n "want to rerun program? [yes/no]: "
+			read rerun
+			if [[ $rerun == "yes" ]]; then
+				script
+			elif [[ $rerun == "no" ]]; then
+				exit
+			else
+				echo -n "didn't get."
+				to_rerun
+			fi
+		}
+		to_rerun
+		fi
+	}
+	dec_process
+fi
+}
+
+script
+ 
